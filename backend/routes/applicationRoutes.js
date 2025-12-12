@@ -1,14 +1,10 @@
 import express from "express";
-import {
-  getApplications,
-  getApplicationsByJob,
-  applyToJob,
-} from "../controllers/applicationController.js";
+import { auth, requireRole } from "../auth.js";
+import { applyToJob, getApplications } from "../controllers/applicationController.js";
 
-const router = express.Router();
+const r = express.Router();
 
-router.get("/", getApplications);             
-router.get("/job/:jobId", getApplicationsByJob);  
-router.post("/", applyToJob);                
+r.post("/", auth, requireRole("user"), applyToJob);
+r.get("/", auth, getApplications);
 
-export default router;
+export default r;

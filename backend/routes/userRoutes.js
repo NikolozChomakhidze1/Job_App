@@ -1,22 +1,19 @@
 import express from "express";
-import db from "../data/database.js";
+import {
+  register,
+  login,
+  getUsers,
+  getUserById,
+  deleteUser,
+} from "../controllers/userController.js";
+import { auth, requireRole } from "../auth.js";
 
-const router = express.Router();
+const r = express.Router();
 
-router.post("/", (req, res) => {
-  const { name, email } = req.body;
+r.post("/register", register);
+r.post("/login", login);
+r.get("/", auth, requireRole("admin"), getUsers);
+r.get("/:id", auth, requireRole("admin"), getUserById);
+r.delete("/:id", auth, requireRole("admin"), deleteUser);
 
-  const stmt = db.prepare(
-    "INSERT INTO users (name, email) VALUES (?, ?)"
-  );
-
-  const result = stmt.run(name, email);
-
-  res.json({
-    id: result.lastInsertRowid,
-    name,
-    email,
-  });
-});
-
-export default router;
+export default r;

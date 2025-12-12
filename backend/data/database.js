@@ -1,34 +1,45 @@
 import Database from "better-sqlite3";
+import fs from "fs";
 
-const db = new Database("database.db");
+if (fs.existsSync("./data/database.sqlite")) {
+  fs.unlinkSync("./data/database.sqlite");
+}
 
+const db = new Database("./data/database.sqlite");
+
+db.pragma("foreign_keys = ON");
 
 db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
+  CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    email TEXT
-  );
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'user'
+  )
 `);
 
 db.exec(`
-  CREATE TABLE IF NOT EXISTS jobs (
+  CREATE TABLE jobs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT,
-    description TEXT,
-    company TEXT
-  );
+    title TEXT NOT NULL,
+    company TEXT NOT NULL,
+    description TEXT NOT NULL,
+    createdBy INTEGER NOT NULL,
+    FOREIGN KEY(createdBy) REFERENCES users(id) ON DELETE SET NULL
+  )
 `);
 
 db.exec(`
-  CREATE TABLE IF NOT EXISTS applications (
+  CREATE TABLE applications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    userId INTEGER,
-    jobId INTEGER,
+    userId INTEGER NOT NULL,
+    jobId INTEGER NOT NULL,
     coverLetter TEXT,
-    FOREIGN KEY(userId) REFERENCES users(id),
-    FOREIGN KEY(jobId) REFERENCES jobs(id)
-  );
+    createdAt TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (jobId) REFERENCES jobs(id) ON DELETE CASCADE
+  )
 `);
 
 export default db;

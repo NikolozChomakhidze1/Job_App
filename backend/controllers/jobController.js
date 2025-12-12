@@ -1,53 +1,36 @@
 import db from "../data/database.js";
 
 export const getJobs = (req, res) => {
-  const jobs = db.prepare("SELECT * FROM jobs").all();
-  res.json(jobs);
+  const rows = db.prepare("SELECT id, title, company, description, createdBy FROM jobs").all();
+  res.json(rows);
 };
 
 export const getJobById = (req, res) => {
   const { id } = req.params;
-
-  const job = db.prepare("SELECT * FROM jobs WHERE id = ?").get(id);
-
-  if (!job) {
-    return res.status(404).json({ message: "Job not found" });
-  }
-
-  res.json(job);
+  const row = db.prepare("SELECT id, title, company, description, createdBy FROM jobs WHERE id = ?").get(id);
+  if (!row) return res.status(404).json({ message: "Job not found" });
+  res.json(row);
 };
 
 export const createJob = (req, res) => {
-  const { title, description, company } = req.body;
-
-  if (!title || !description || !company) {
-    return res.status(400).json({ message: "Missing required fields" });
-  }
-
-  const stmt = db.prepare(`
-    INSERT INTO jobs (title, description, company)
-    VALUES (?, ?, ?)
-  `);
-
-  const result = stmt.run(title, description, company);
-
-  res.status(201).json({
-    id: result.lastInsertRowid,
-    title,
-    description,
-    company,
-  });
+  const { title, company, description } = req.body;
+  const createdBy = req.user.id;
+  if (!title || !company || !description) return res.status(400).json({ message: "Missing fields" });
+  const stmt = db.prepare("INSERT INTO jobs (title, company, description, createdBy) VALUES (?, ?, ?, ?)");
+  const result = stmt.run(title, company, description, createdBy);
+  const id = result.lastInsertRowid;
+  res.status(201).json({ id, title, company, description, createdBy });
 };
 
 export const deleteJob = (req, res) => {
   const { id } = req.params;
-
-  const stmt = db.prepare("DELETE FROM jobs WHERE id = ?");
-  const result = stmt.run(id);
-
-  if (result.changes === 0) {
-    return res.status(404).json({ message: "Job not found" });
+  const job = db.prepare("SELECT * FROM jobs WHERE id = ?").get(id);
+  if (!job) return res.status(404).json({ message: "Job not found" });
+  const userId = req.user.id;
+  const role = req.user.role;
+  if (role !== "admin" && !(role === "recruiter" && job.createdBy === userId)) {
+    return res.status(403).json({ message: "Forbidden" });
   }
-
-  res.json({ message: "Job deleted" });
+  db.prepare("DELETE FROM jobs WHERE id = ?").run(id);
+  res.json({ message: "Deleted" });
 };

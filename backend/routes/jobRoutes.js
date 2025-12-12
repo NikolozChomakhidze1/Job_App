@@ -5,13 +5,13 @@ import {
   createJob,
   deleteJob,
 } from "../controllers/jobController.js";
+import { auth, requireRole } from "../auth.js";
 
-const router = express.Router();
+const r = express.Router();
 
+r.get("/", getJobs);
+r.get("/:id", getJobById);
+r.post("/", auth, requireRole("admin", "recruiter"), createJob);
+r.delete("/:id", auth, deleteJob);
 
-router.get("/", getJobs);
-router.get("/:id", getJobById);
-router.post("/", createJob);
-router.delete("/:id", deleteJob);
-
-export default router;
+export default r;

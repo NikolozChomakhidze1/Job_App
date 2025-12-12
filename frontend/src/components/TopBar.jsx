@@ -16,6 +16,7 @@ export default function TopBar() {
         <Link to="/" className="brand">
           JobApp
         </Link>
+        
 
         <div className="topbarRight">
           {!user ? (

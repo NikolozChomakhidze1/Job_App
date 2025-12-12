@@ -27,6 +27,12 @@ export const login = (req, res) => {
   res.json({ token, user: { id: row.id, name: row.name, email: row.email, role: row.role } });
 };
 
+export const getMe = (req, res) => {
+  const row = db.prepare("SELECT id, name, email, role FROM users WHERE id = ?").get(req.user.id);
+  if (!row) return res.status(404).json({ message: "Not found" });
+  res.json(row);
+};
+
 export const getUsers = (req, res) => {
   const rows = db.prepare("SELECT id, name, email, role FROM users").all();
   res.json(rows);

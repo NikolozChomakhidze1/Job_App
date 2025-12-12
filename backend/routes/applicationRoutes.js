@@ -4,7 +4,10 @@ import { auth } from "../auth.js";
 
 const r = express.Router();
 
-r.post("/:jobId/applications", auth, applyToJob);
-r.get("/applications", auth, getApplications);
+
+r.post("/:jobId", auth, applyToJob);
+
+
+r.get("/", auth, getApplications);
 
 export default r;

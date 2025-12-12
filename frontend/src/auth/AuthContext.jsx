@@ -1,36 +1,63 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { loginUser, registerUser } from "../api.js";
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
+
+const LS_TOKEN = "jobapp_token";
+const LS_USER = "jobapp_user";
 
 export function AuthProvider({ children }) {
+  const [token, setToken] = useState(() => localStorage.getItem(LS_TOKEN) || "");
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem("user");
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      const raw = localStorage.getItem(LS_USER);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
   });
 
-  const [token, setToken] = useState(() => localStorage.getItem("token") || "");
+  useEffect(() => {
+    if (token) localStorage.setItem(LS_TOKEN, token);
+    else localStorage.removeItem(LS_TOKEN);
+  }, [token]);
 
-  function login(userData, token) {
-    setUser(userData);
-    setToken(token);
+  useEffect(() => {
+    if (user) localStorage.setItem(LS_USER, JSON.stringify(user));
+    else localStorage.removeItem(LS_USER);
+  }, [user]);
 
-    localStorage.setItem("user", JSON.stringify(userData));
-    localStorage.setItem("token", token);
+  async function login(email, password) {
+    const data = await loginUser({ email, password });
+    setToken(data.token);
+    setUser(data.user);
+    return data;
+  }
+
+  async function register(name, email, password) {
+    // your backend register returns user only (no token)
+    // so after register we auto-login to get the token
+    await registerUser({ name, email, password });
+    return login(email, password);
   }
 
   function logout() {
-    setUser(null);
     setToken("");
-
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+    setUser(null);
+    localStorage.removeItem(LS_TOKEN);
+    localStorage.removeItem(LS_USER);
   }
 
-  return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({ user, token, isAuthed: !!token, login, register, logout }),
+    [user, token]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export const useAuth = () => useContext(AuthContext);
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
+  return ctx;
+}

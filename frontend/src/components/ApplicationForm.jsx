@@ -1,59 +1,29 @@
 import { useState } from "react";
 
-export default function ApplicationForm({ onSubmit, disabled }) {
-  const [candidateName, setCandidateName] = useState("");
-  const [candidateEmail, setCandidateEmail] = useState("");
-  const [notes, setNotes] = useState("");
+export default function ApplicationForm({ onSubmit, loading }) {
+  const [coverLetter, setCoverLetter] = useState("");
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    onSubmit({ candidateName, candidateEmail, notes });
-    setCandidateName("");
-    setCandidateEmail("");
-    setNotes("");
+    await onSubmit({ coverLetter });
+    setCoverLetter("");
   }
 
   return (
     <form onSubmit={handleSubmit} style={{ marginTop: 14 }}>
-      <h3 style={{ margin: "8px 0" }}>Apply for this job</h3>
+      <h3 style={{ margin: "8px 0" }}>Apply</h3>
 
-      <div className="formRow">
-        <label className="muted">Name</label>
-        <input
-          className="input"
-          value={candidateName}
-          onChange={(e) => setCandidateName(e.target.value)}
-          required
-          disabled={disabled}
-          placeholder="Your full name"
-        />
-      </div>
+      <label className="label">Cover letter (optional)</label>
+      <textarea
+        className="textarea"
+        rows={4}
+        value={coverLetter}
+        onChange={(e) => setCoverLetter(e.target.value)}
+        placeholder="Write a short message…"
+      />
 
-      <div className="formRow">
-        <label className="muted">Email</label>
-        <input
-          className="input"
-          value={candidateEmail}
-          onChange={(e) => setCandidateEmail(e.target.value)}
-          required
-          disabled={disabled}
-          placeholder="you@example.com"
-        />
-      </div>
-
-      <div className="formRow">
-        <label className="muted">Notes</label>
-        <textarea
-          className="textarea"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          disabled={disabled}
-          placeholder="Short message to recruiter (optional)"
-        />
-      </div>
-
-      <button className="btn btnPrimary" type="submit" disabled={disabled} style={{ marginTop: 12 }}>
-        Submit Application
+      <button className="btn" type="submit" disabled={loading}>
+        {loading ? "Applying..." : "Apply to this job"}
       </button>
     </form>
   );

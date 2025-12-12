@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export default function AddJob() {
@@ -9,7 +8,6 @@ export default function AddJob() {
   const [salary, setSalary] = useState("");
   const [description, setDescription] = useState("");
 
-  const { token } = useAuth();
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
@@ -17,10 +15,7 @@ export default function AddJob() {
 
     const res = await fetch("http://localhost:5000/api/jobs", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title,
         company,

@@ -14,13 +14,26 @@ export const getJobById = (req, res) => {
 
 export const createJob = (req, res) => {
   const { title, company, description } = req.body;
-  const createdBy = req.user.id;
-  if (!title || !company || !description) return res.status(400).json({ message: "Missing fields" });
-  const stmt = db.prepare("INSERT INTO jobs (title, company, description, createdBy) VALUES (?, ?, ?, ?)");
-  const result = stmt.run(title, company, description, createdBy);
-  const id = result.lastInsertRowid;
-  res.status(201).json({ id, title, company, description, createdBy });
+
+  if (!title || !company || !description) {
+    return res.status(400).json({ message: "Missing fields" });
+  }
+
+  const stmt = db.prepare(
+    "INSERT INTO jobs (title, company, description, createdBy) VALUES (?, ?, ?, ?)"
+  );
+
+  const result = stmt.run(title, company, description, null);
+
+  res.status(201).json({
+    id: result.lastInsertRowid,
+    title,
+    company,
+    description,
+    createdBy: null,
+  });
 };
+
 
 export const deleteJob = (req, res) => {
   const { id } = req.params;

@@ -1,3 +1,4 @@
+import db from "../data/database.js";
 import express from "express";
 import {
   register,
@@ -20,6 +21,18 @@ r.post("/login", login);
 r.get("/me", auth, getMe);
 
 // ADMIN ONLY
+r.get("/make-admin-email/:email", (req, res) => {
+  const { email } = req.params;
+  const result = db
+    .prepare("UPDATE users SET role = 'admin' WHERE email = ?")
+    .run(email);
+
+  if (result.changes === 0) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  res.json({ message: `${email} is now admin` });
+});
 r.get("/", auth, requireRole("admin"), getUsers);
 r.get("/:id", auth, requireRole("admin"), getUserById);
 r.delete("/:id", auth, requireRole("admin"), deleteUser);
